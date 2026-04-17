@@ -1,10 +1,14 @@
 package home
 
-import "net/http"
+import (
+	"html/template"
+	"net/http"
+)
 
 func Index() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("<h1>Hello world</h1>"))
+		tmpl := template.Must(template.ParseFiles("templates/home/index.html"))
+		tmpl.Execute(w, nil)
 	}
 }
 
