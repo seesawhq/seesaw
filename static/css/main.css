@@ -1,5 +1,8 @@
 @import "tailwindcss";
+
 @plugin "daisyui" {
   /* Only include the light theme */
   themes: lemonade --default;
 }
+
+.css {}

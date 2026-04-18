@@ -3,13 +3,14 @@ package auth
 import (
 	"fmt"
 	"html/template"
+	"io/fs"
 	"net/http"
 )
 
-func Login() http.HandlerFunc {
+func Login(templs fs.FS) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			tmpl := template.Must(template.ParseFiles("templates/layouts/auth.html", "templates/auth/login.html"))
+			tmpl := template.Must(template.ParseFS(templs, "templates/layouts/auth.html", "templates/auth/login.html"))
 			tmpl.Execute(w, nil)
 		}
 		if r.Method == http.MethodPost {
@@ -20,7 +21,7 @@ func Login() http.HandlerFunc {
 	}
 }
 
-func New(serverMux *http.ServeMux) {
-	serverMux.HandleFunc("GET /login/", Login())
-	serverMux.HandleFunc("POST /login/", Login())
+func New(templs fs.FS, serverMux *http.ServeMux) {
+	serverMux.HandleFunc("GET /login/", Login(templs))
+	serverMux.HandleFunc("POST /login/", Login(templs))
 }

@@ -1,0 +1,7 @@
+tmp
+.env
+.idea
+*.db
+
+node_modules
+.vscode

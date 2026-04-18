@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 
@@ -11,6 +12,12 @@ import (
 	"gorm.io/gorm"
 )
 
+//go:embed static
+var StaticFiles embed.FS
+
+//go:embed templates
+var TemplateFS embed.FS
+
 func main() {
 	db, err := gorm.Open(sqlite.Open("seesaw.db"), &gorm.Config{})
 	if err != nil {
@@ -18,10 +25,10 @@ func main() {
 	}
 	db.AutoMigrate(&models.User{}, &models.Team{}, &models.Member{}, &models.FeatureFlag{})
 	mux := http.NewServeMux()
-	fs := http.FileServer(http.Dir("./static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
-	home.New(mux)
-	auth.New(mux)
+	fs := http.FileServer(http.FS(StaticFiles))
+	mux.Handle("/static/", fs)
+	home.New(TemplateFS, mux)
+	auth.New(TemplateFS, mux)
 	fmt.Println("started server at 0.0.0.0:3000")
 	http.ListenAndServe("0.0.0.0:3000", mux)
 }
