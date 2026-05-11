@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Member struct {
 	gorm.Model
-	ID     int64
+	ID     int64 `gorm:"primarykey"`
 	TeamID int64
 	Team   Team
 	UserID int64

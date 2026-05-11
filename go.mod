@@ -1,12 +1,23 @@
 module github.com/seesawhq/seesaw
 
-go 1.25.0
+go 1.26
 
 tool github.com/air-verse/air
 
 require (
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	golang.org/x/crypto v0.49.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
+)
+
+require (
+	github.com/Oudwins/zog v0.22.2 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b // indirect
 )
 
 require (
@@ -17,6 +28,7 @@ require (
 	github.com/bep/golibsass v1.2.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
+	github.com/go-playground/validator/v10 v10.30.2
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gohugoio/hugo v0.149.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
@@ -30,7 +42,8 @@ require (
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cast v1.9.2 // indirect
 	github.com/tdewolff/parse/v2 v2.8.3 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 )

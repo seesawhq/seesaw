@@ -1,0 +1,7 @@
+<div id="toast-container" hx-swap-oob="afterbegin">
+    <div class="toast toast-top toast-end">
+        <div class="alert alert-success" hx-on::load="setTimeout(() => this.closest('.toast').remove(), 3000)">
+            <span>{{ .Message }}</span>
+        </div>
+    </div>
+</div>

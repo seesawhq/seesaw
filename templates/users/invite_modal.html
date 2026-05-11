@@ -1,0 +1,18 @@
+<form hx-post="/users/invite/">
+    <div class="flex justify-center">
+        <div class="flex justify-around items-baseline">
+            <div>
+                <input name="email" type="email" placeholder="Email address"
+                    class='input {{ if index .Errors "email" }}input-error{{ end }}' />
+                {{ if index .Errors "email" }}
+                <label for="email" class="label">
+                    <span class="label-text-alt text-error">{{ index .Errors "email" }}</span>
+                </label>
+                {{ end }}
+
+            </div>
+            <button type="submit" class="btn btn-neutral mt-4">Invite</button>
+
+        </div>
+    </div>
+</form>

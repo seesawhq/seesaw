@@ -2,7 +2,5 @@
 
 @plugin "daisyui" {
   /* Only include the light theme */
-  themes: lemonade --default;
+  themes: lofi --default;
 }
-
-.css {}

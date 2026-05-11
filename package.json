@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "dev": "npx @tailwindcss/cli -i ./static/css/main.css -o ./static/css/output.css"
+  },
   "dependencies": {
     "@tailwindcss/cli": "^4.2.2",
     "tailwindcss": "^4.2.2"

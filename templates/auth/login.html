@@ -1,14 +1,24 @@
+{{template "layouts/auth.html" .}}
+
 {{define "content"}}
 <form action="/login/" method="post">
+    <span>{{ .ErrorMsg }}</span>
     <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
         <legend class="fieldset-legend">Login</legend>
-
-        <label class="label">Email</label>
-        <input name="email" type="email" class="input" placeholder="Email" />
-
-        <label class="label">Password</label>
-        <input name="password" type="password" class="input" placeholder="Password" />
-
+        <input name="email" type="email" class='input {{ if index .Errors "email" }}input-error{{ end }}'
+            placeholder="Email" />
+        {{ if index .Errors "email" }}
+        <label for="email" class="label">
+            <span class="label-text-alt text-error">{{ index .Errors "email" }}</span>
+        </label>
+        {{ end }}
+        <input name="password" type="password" class='input {{ if index .Errors "email" }}input-error{{ end }}'
+            placeholder="Password" />
+        {{ if index .Errors "password" }}
+        <label class="label">
+            <span class="label-text-alt text-error">{{ index .Errors "password" }}</span>
+        </label>
+        {{ end }}
         <button type="submit" class="btn btn-neutral mt-4">Login</button>
     </fieldset>
 </form>

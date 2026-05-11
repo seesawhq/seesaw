@@ -3,11 +3,14 @@ package main
 import (
 	"embed"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 
+	"github.com/seesawhq/seesaw/config"
+	"github.com/seesawhq/seesaw/controllers"
+	"github.com/seesawhq/seesaw/middleware"
 	"github.com/seesawhq/seesaw/models"
-	"github.com/seesawhq/seesaw/views/auth"
-	"github.com/seesawhq/seesaw/views/home"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -19,16 +22,84 @@ var StaticFiles embed.FS
 var TemplateFS embed.FS
 
 func main() {
-	db, err := gorm.Open(sqlite.Open("seesaw.db"), &gorm.Config{})
+
+	//get config from evnironment variables
+	config := config.GetConfig()
+
+	// get slog logger for better logging formats
+	// format logs in json format
+	logger := getLogger(&config)
+
+	// setup custom logger as default. so even slog.* functions even uses coustom
+	// logger
+	slog.SetDefault(logger)
+
+	// opens sqlite database
+	db, err := gorm.Open(sqlite.Open(config.SQLITEDatanasePath), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		logger.Error("unable to connect to database", "err", err.Error())
+		return
 	}
-	db.AutoMigrate(&models.User{}, &models.Team{}, &models.Member{}, &models.FeatureFlag{})
+	logger.Info("migrating models")
+	err = db.AutoMigrate(&models.User{}, &models.Team{}, &models.Member{}, &models.FeatureFlag{}, &models.UserInvitation{})
+	if err != nil {
+		logger.Error("error while migrating models", "err", err.Error())
+		return
+	}
+
+	// parse all the templates file created inside tempaltes directory
+	// only one level down will be parsed which is enough for use
+	// there is no need to parse multiple level parse
 	mux := http.NewServeMux()
+
+	// get handler which can serve static files
 	fs := http.FileServer(http.FS(StaticFiles))
+
+	// this path will server all the static files.
+	// any file stored in static directory will be stored
+	// not matter the extension
 	mux.Handle("/static/", fs)
-	home.New(TemplateFS, mux)
-	auth.New(TemplateFS, mux)
-	fmt.Println("started server at 0.0.0.0:3000")
-	http.ListenAndServe("0.0.0.0:3000", mux)
+
+	// start adding controller. each controller adds routes to mux
+	controllers.NewDashboardController(&config, logger, TemplateFS, db, mux)
+	controllers.NewLoginController(&config, logger, TemplateFS, db, mux)
+	controllers.NewUsersController(&config, logger, TemplateFS, db, mux)
+	controllers.NewUserInvitationsController(&config, logger, TemplateFS, db, mux)
+
+	// If demo flag is on. Here we can do things which makes demo run.
+	// for now we are creating demo user. So potential user can use
+	// same credentials to easily login and try out things
+	if config.DemoDeployment {
+		logger.Info("starting service with demo flag on.")
+		models.CreateDemoAdmin(db)
+	}
+
+	serverAddrWithPort := fmt.Sprintf("%s:%s", config.Addr, config.Port)
+
+	logger.Info(fmt.Sprintf("started server at %s", serverAddrWithPort))
+	server := http.Server{
+		Addr:    serverAddrWithPort,
+		Handler: middleware.Metrics(middleware.IsSetupComplete(db, mux)),
+	}
+	server.ListenAndServe()
+}
+
+func getLogger(config *config.ConfigStruct) *slog.Logger {
+	logLevel := slog.LevelDebug
+	switch config.LogLevel {
+	case "DEBUG":
+		logLevel = slog.LevelDebug
+	case "INFO":
+		logLevel = slog.LevelInfo
+	case "WARN":
+		logLevel = slog.LevelWarn
+	case "ERROR":
+		logLevel = slog.LevelError
+	}
+
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: logLevel,
+	})
+	logger := slog.New(handler)
+	return logger
 }

@@ -1,0 +1,46 @@
+{{template "layouts/dashboard.html" .}}
+
+{{define "content"}}
+<button class="btn btn-accent" hx-get="/users/invite/" hx-target="#invite-modal-form-container">
+    Invite users
+</button>
+<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>First name</th>
+                <th>Last Name</th>
+                <th>Is owner</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range . }}
+            <tr>
+                <td>{{ .FirstName }}</td>
+                <td>{{ .LastName }}</td>
+                <td>{{ .IsOwner }}</td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</div>
+<dialog id="user-invite-modal" class="modal">
+    <div class="modal-box">
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 class="text-lg font-bold">Invite User</h3>
+        <div id="invite-modal-form-container"></div>
+    </div>
+</dialog>
+<script>
+    document.body.addEventListener("open-user-invite-modal", function (evt) {
+        const modal = document.getElementById('user-invite-modal');
+        modal.showModal();
+    });
+    document.body.addEventListener("close-user-invite-modal", function (evt) {
+        const modal = document.getElementById('user-invite-modal');
+        modal.close();
+    });
+</script>
+{{end}}

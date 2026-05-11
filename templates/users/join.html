@@ -1,0 +1,33 @@
+{{template "layouts/auth.html" .}}
+
+{{define "content"}}
+<form action="/users/join/{{ .Token }}" method="post">
+    <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+        <legend class="fieldset-legend">Join</legend>
+        <input name="FirstName" type="text" class='input {{ if index .Errors "first_name" }}input-error{{ end }}'
+            placeholder="John" />
+        {{ if index .Errors "first_name" }}
+        <label class="label">
+            <span class="label-text-alt text-error">{{ index .Errors "first_name" }}</span>
+        </label>
+        {{ end }}
+        <input name="LastName" type="text" class='input {{ if index .Errors "last_name" }}input-error{{ end }}'
+            placeholder="John" />
+        {{ if index .Errors "last_name" }}
+        <label class="label">
+            <span class="label-text-alt text-error">{{ index .Errors "last_name" }}</span>
+        </label>
+        {{ end }}
+        <input type="email" disabled value="{{ .Email }}"
+            class='input {{ if index .Errors "email" }}input-error{{ end }}' placeholder="Email" />
+        <input name="password" type="password" class='input {{ if index .Errors "email" }}input-error{{ end }}'
+            placeholder="Password" />
+        {{ if index .Errors "password" }}
+        <label class="label">
+            <span class="label-text-alt text-error">{{ index .Errors "password" }}</span>
+        </label>
+        {{ end }}
+        <button type="submit" class="btn btn-neutral mt-4">Join</button>
+    </fieldset>
+</form>
+{{end}}

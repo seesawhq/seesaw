@@ -2,8 +2,9 @@ FROM node:25-alpine3.22 AS frontend-build
 WORKDIR /app
 COPY package.json .
 COPY package-lock.json .
+RUN npm ci
 COPY . .
-RUN npm install && npx @tailwindcss/cli -i ./static/css/main.css -o ./static/css/output.css
+RUN npx @tailwindcss/cli -i ./static/css/main.css -o ./static/css/output.css
 
 FROM golang:1.26.2-alpine3.23 AS backend-build
 WORKDIR /app
