@@ -1,0 +1,23 @@
+<form autocomplete="off" hx-post="/workspaces/new">
+    <div class="flex justify-center items-start gap-4">
+
+        <div class="form-control w-full max-w-xs">
+            <input id="name" name="name" type="text" autocomplete="off" placeholder="Workspace name"
+                class='input input-bordered w-full {{ if index .Errors "name" }}input-error{{ end }}' />
+
+            <label for="name" class="label pt-1 pb-0 pl-1">
+                {{ if index .Errors "name" }}
+                <span class="label-text-alt text-error font-medium">
+                    {{ index .Errors "name" }}
+                </span>
+                {{ end }}
+            </label>
+
+        </div>
+
+        <button type="submit" class="btn btn-neutral">
+            Create
+        </button>
+
+    </div>
+</form>

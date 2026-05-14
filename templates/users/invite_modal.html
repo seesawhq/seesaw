@@ -1,18 +1,24 @@
 <form hx-post="/users/invite/">
-    <div class="flex justify-center">
-        <div class="flex justify-around items-baseline">
-            <div>
-                <input name="email" type="email" placeholder="Email address"
-                    class='input {{ if index .Errors "email" }}input-error{{ end }}' />
-                {{ if index .Errors "email" }}
-                <label for="email" class="label">
-                    <span class="label-text-alt text-error">{{ index .Errors "email" }}</span>
-                </label>
-                {{ end }}
+    <div class="flex justify-center items-start gap-4">
 
-            </div>
-            <button type="submit" class="btn btn-neutral mt-4">Invite</button>
+        <div class="form-control w-full max-w-xs">
+            <input id="email" name="email" type="email" placeholder="Email address"
+                class='input input-bordered w-full {{ if index .Errors "email" }}input-error{{ end }}' />
+
+
+            <label for="email" class="label pt-1 pb-0 pl-1">
+                {{ if index .Errors "email" }}
+                <span class="label-text-alt text-error font-medium">
+                    {{ index .Errors "email" }}
+                </span>
+                {{ end }}
+            </label>
 
         </div>
+
+        <button type="submit" class="btn btn-neutral">
+            Invite
+        </button>
+
     </div>
 </form>

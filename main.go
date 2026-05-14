@@ -41,15 +41,19 @@ func main() {
 		return
 	}
 	logger.Info("migrating models")
-	err = db.AutoMigrate(&models.User{}, &models.Team{}, &models.Member{}, &models.FeatureFlag{}, &models.UserInvitation{})
+	err = db.AutoMigrate(
+		&models.User{},
+		&models.Workspace{},
+		&models.Environment{},
+		&models.Member{},
+		&models.Flag{},
+		&models.UserInvitation{},
+	)
 	if err != nil {
 		logger.Error("error while migrating models", "err", err.Error())
 		return
 	}
 
-	// parse all the templates file created inside tempaltes directory
-	// only one level down will be parsed which is enough for use
-	// there is no need to parse multiple level parse
 	mux := http.NewServeMux()
 
 	// get handler which can serve static files
@@ -58,13 +62,15 @@ func main() {
 	// this path will server all the static files.
 	// any file stored in static directory will be stored
 	// not matter the extension
-	mux.Handle("/static/", fs)
+	mux.Handle("GET /static/", fs)
 
 	// start adding controller. each controller adds routes to mux
+	controllers.NewWorkspacesController(&config, logger, TemplateFS, db, mux)
 	controllers.NewDashboardController(&config, logger, TemplateFS, db, mux)
 	controllers.NewLoginController(&config, logger, TemplateFS, db, mux)
 	controllers.NewUsersController(&config, logger, TemplateFS, db, mux)
 	controllers.NewUserInvitationsController(&config, logger, TemplateFS, db, mux)
+	controllers.NewFlagsController(&config, logger, TemplateFS, db, mux)
 
 	// If demo flag is on. Here we can do things which makes demo run.
 	// for now we are creating demo user. So potential user can use

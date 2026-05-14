@@ -1,0 +1,49 @@
+<form autocomplete="off" hx-post="/workspaces/{{ .WorkspaceID}}/flags/new">
+    <div class="flex flex-col items-stretch justify-center gap-4 w-full max-w-xs">
+
+        <div class="form-control w-full">
+            <input id="name" name="name" type="text" autocomplete="off" placeholder="Flag name"
+                class='input input-bordered w-full {{ if index .Errors "name" }}input-error{{ end }}' />
+
+            <label for="name" class="label pt-1 pb-0 pl-1">
+                {{ if index .Errors "name" }}
+                <span class="label-text-alt text-error font-medium">
+                    {{ index .Errors "name" }}
+                </span>
+                {{ end }}
+            </label>
+        </div>
+        <div class="form-control w-full max-w-xs">
+            <input id="key" name="key" type="text" autocomplete="off" placeholder="Flag key"
+                class='input input-bordered w-full {{ if index .Errors "key" }}input-error{{ end }}' />
+
+            <label for="key" class="label pt-1 pb-0 pl-1">
+                {{ if index .Errors "key" }}
+                <span class="label-text-alt text-error font-medium">
+                    {{ index .Errors "key" }}
+                </span>
+                {{ end }}
+            </label>
+        </div>
+
+        <div class="form-control w-full max-w-xs">
+            <select name="type" class='select {{ if index .Errors "type" }}select-error{{ end }}'>
+                <option disabled selected>Select type</option>
+                <option value="boolean">Bolean</option>
+                <option value="varient">Varient</option>
+            </select>
+
+            <label for="type" class="label pt-1 pb-0 pl-1">
+                {{ if index .Errors "type" }}
+                <span class="label-text-alt text-error font-medium">
+                    {{ index .Errors "type" }}
+                </span>
+                {{ end }}
+            </label>
+        </div>
+        <button type="submit" class="btn btn-neutral self-end">
+            Create
+        </button>
+
+    </div>
+</form>

@@ -16,21 +16,21 @@ func Auth(config *config.ConfigStruct, db *gorm.DB, next http.HandlerFunc) http.
 		authCookie, err := r.Cookie("auth")
 		if err != nil {
 			slog.Info("error while parsing auth cookie", "err", err.Error())
-			http.Redirect(w, r, "/login/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 			return
 		}
 		jwtToken := authCookie.Value
 		userID, err := ssjwt.ParseLoginToken(config, jwtToken)
 		if err != nil {
 			slog.Error("error while parsing JWT token", "err", err.Error())
-			http.Redirect(w, r, "/login/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 			return
 		}
 
 		user, err := gorm.G[models.User](db).Where("id = ?", userID).First(r.Context())
 		if err != nil {
 			slog.Error("error while fetching user", "err", err.Error())
-			http.Redirect(w, r, "/login/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 			return
 		}
 

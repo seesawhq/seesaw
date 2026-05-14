@@ -37,5 +37,5 @@ func NewUsersController(config *config.ConfigStruct, logger *slog.Logger, templs
 		TemplateFS: templs,
 		Logger:     logger,
 	}
-	serverMux.HandleFunc("/users/", middleware.Auth(config, db, usersController.Index()))
+	serverMux.HandleFunc("/users", middleware.Auth(config, db, usersController.Index()))
 }

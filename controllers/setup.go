@@ -22,6 +22,6 @@ func Complete(logger *slog.Logger, templs fs.FS) http.HandlerFunc {
 }
 
 func New(logger *slog.Logger, templs fs.FS, serverMux *http.ServeMux) {
-	serverMux.HandleFunc("/setup/", Index(logger, templs))
+	serverMux.HandleFunc("/setup", Index(logger, templs))
 	serverMux.HandleFunc("/setup/complete", Complete(logger, templs))
 }

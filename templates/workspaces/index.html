@@ -1,0 +1,57 @@
+{{template "layouts/dashboard.html" .}}
+
+{{define "content"}}
+<div class="px-16">
+    <div class="flex justify-between items-center">
+        <h3 class="font-extrabold">Workspaces</h3>
+        <button class="btn btn-accent mb-4 flex justify-start" hx-get="/workspaces/new"
+            hx-target="#new-workspace-modal-form-container">
+            New workspace
+        </button>
+    </div>
+
+    <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+        {{ if gt (len .) 0 }}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Environments</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range . }}
+                <tr>
+                    <td><a href="/workspaces/{{.ID}}">{{ .Name }} - {{ .ID }}</a></td>
+                    <td>{{ len .Environments }}</td>
+                    <td>{{ .CreatedAt }}</td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+        {{ end }}
+    </div>
+</div>
+<dialog id="new-workspace-modal" class="modal">
+    <div class="modal-box">
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 class="text-lg font-bold ml-6 mb-6">Create new workspace</h3>
+        <div id="new-workspace-modal-form-container"></div>
+    </div>
+</dialog>
+<div id="toast-container" hx-swap-oob="afterbegin">
+</div>
+<script>
+    document.body.addEventListener("open-new-workspace-modal", function (evt) {
+        const modal = document.getElementById('new-workspace-modal');
+        modal.showModal();
+    });
+    document.body.addEventListener("close-new-workspace-modal", function (evt) {
+        const modal = document.getElementById('new-workspace-modal');
+        modal.close();
+    });
+</script>
+{{end}}

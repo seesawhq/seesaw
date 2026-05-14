@@ -32,8 +32,8 @@ var LoginFormSchema = zog.Struct(zog.Shape{
 	"password": zog.String().Required().Min(1, zog.Message("password is required")),
 })
 
-func (ac *AuthController) Login() http.HandlerFunc {
-	loginPage := template.Must(template.ParseFS(ac.TemplateFS, "templates/layouts/auth.html", "templates/auth/login.html"))
+func (ac *AuthController) Index() http.HandlerFunc {
+	loginPage := template.Must(template.ParseFS(ac.TemplateFS, "templates/layouts/auth.html", "templates/login/index.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Context().Value("user") != nil {
 			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
@@ -47,37 +47,44 @@ func (ac *AuthController) Login() http.HandlerFunc {
 			}
 			return
 		}
+	}
+}
 
-		if r.Method == http.MethodPost {
-			loginForm := LoginForm{}
-			validationErrs := LoginFormSchema.Parse(zhttp.Request(r), &loginForm)
-			if validationErrs != nil {
-				errs := formatErrors(validationErrs)
-				loginPage.Execute(w, map[string]interface{}{"Errors": errs})
-				return
-			}
-			user, err := gorm.G[models.User](ac.DB).Where("email = ?", loginForm.Email).First(r.Context())
-			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					errMsg := "incorrect email or password"
-					loginPage.Execute(w, map[string]interface{}{"Errors": map[string]string{}, "ErrorMsg": errMsg})
-				}
-			}
-			if !user.CheckPassword(loginForm.Password) {
+func (ac *AuthController) Post() http.HandlerFunc {
+	loginPage := template.Must(template.ParseFS(ac.TemplateFS, "templates/layouts/auth.html", "templates/login/index.html"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Context().Value("user") != nil {
+			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+			return
+		}
+		loginForm := LoginForm{}
+		validationErrs := LoginFormSchema.Parse(zhttp.Request(r), &loginForm)
+		if validationErrs != nil {
+			errs := formatErrors(validationErrs)
+			loginPage.Execute(w, map[string]interface{}{"Errors": errs})
+			return
+		}
+		user, err := gorm.G[models.User](ac.DB).Where("email = ?", loginForm.Email).First(r.Context())
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
 				errMsg := "incorrect email or password"
 				loginPage.Execute(w, map[string]interface{}{"Errors": map[string]string{}, "ErrorMsg": errMsg})
-				return
 			}
-			jwtToken, _ := ssjwt.CreateLoginToken(ac.Config, user.ID)
-			authCookie := &http.Cookie{
-				Name:     "auth",
-				Value:    jwtToken,
-				Path:     "/",
-				HttpOnly: true,
-			}
-			http.SetCookie(w, authCookie)
-			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 		}
+		if !user.CheckPassword(loginForm.Password) {
+			errMsg := "incorrect email or password"
+			loginPage.Execute(w, map[string]interface{}{"Errors": map[string]string{}, "ErrorMsg": errMsg})
+			return
+		}
+		jwtToken, _ := ssjwt.CreateLoginToken(ac.Config, user.ID)
+		authCookie := &http.Cookie{
+			Name:     "auth",
+			Value:    jwtToken,
+			Path:     "/",
+			HttpOnly: true,
+		}
+		http.SetCookie(w, authCookie)
+		http.Redirect(w, r, "/workspaces", http.StatusSeeOther)
 	}
 }
 func (ac *AuthController) Logout() http.HandlerFunc {
@@ -90,7 +97,7 @@ func (ac *AuthController) Logout() http.HandlerFunc {
 			HttpOnly: true,
 		}
 		http.SetCookie(w, authCookie)
-		http.Redirect(w, r, "/login/", http.StatusPermanentRedirect)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 	}
 }
 
@@ -101,7 +108,7 @@ func NewLoginController(config *config.ConfigStruct, logger *slog.Logger, templs
 		TemplateFS: templs,
 		Logger:     logger,
 	}
-	serverMux.HandleFunc("GET /login/", authController.Login())
-	serverMux.HandleFunc("POST /login/", authController.Login())
-	serverMux.HandleFunc("GET /logout/", authController.Logout())
+	serverMux.HandleFunc("GET /login", authController.Index())
+	serverMux.HandleFunc("POST /login", authController.Post())
+	serverMux.HandleFunc("GET /logout", authController.Logout())
 }

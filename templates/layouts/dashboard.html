@@ -8,6 +8,16 @@
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js"
         integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V"
         crossorigin="anonymous"></script>
+    <script>
+        document.body.addEventListener("open-modal", function (evt) {
+            const modal = document.getElementById('modal');
+            modal.showModal();
+        });
+        document.body.addEventListener("close-modal", function (evt) {
+            const modal = document.getElementById('modal');
+            modal.close();
+        });
+    </script>
     <title>Seesaw</title>
 </head>
 
@@ -17,7 +27,7 @@
             <input id="my-drawer-4" type="checkbox" class="drawer-toggle" />
             <div class="drawer-content">
                 <!-- Navbar -->
-                <nav class="navbar w-full bg-base-300">
+                <nav class="navbar w-full">
                     <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost">
                         <!-- Sidebar toggle icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round"
@@ -29,7 +39,7 @@
                             <path d="M14 10l2 2l-2 2"></path>
                         </svg>
                     </label>
-                    <div class="px-4">Seesaw</div>
+                    <div class="px-4 font-bold text-3xl">SeeSaw</div>
                 </nav>
                 <!-- Page content here -->
                 <div class="p-4">
@@ -60,7 +70,8 @@
 
                         <!-- List item -->
                         <li>
-                            <button class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Settings">
+                            <a href="/workspaces" class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
+                                data-tip="Workspaces">
                                 <!-- Settings icon -->
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round"
                                     stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor"
@@ -70,8 +81,8 @@
                                     <circle cx="17" cy="17" r="3"></circle>
                                     <circle cx="7" cy="7" r="3"></circle>
                                 </svg>
-                                <span class="is-drawer-close:hidden">Settings</span>
-                            </button>
+                                <span class="is-drawer-close:hidden">Workspaces</span>
+                            </a>
                         </li>
                     </ul>
                 </div>

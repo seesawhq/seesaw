@@ -32,5 +32,5 @@ func NewDashboardController(config *config.ConfigStruct, logger *slog.Logger, te
 		TemplateFS: templs,
 		Logger:     logger,
 	}
-	serverMux.HandleFunc("/", middleware.Auth(config, db, dashboardController.Index()))
+	serverMux.HandleFunc("/{$}", middleware.Auth(config, db, dashboardController.Index()))
 }

@@ -3,7 +3,6 @@ package controllers
 import (
 	"embed"
 	"errors"
-	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -54,16 +53,13 @@ func (uic *UserInvitationsController) Index() http.HandlerFunc {
 		if r.Method == http.MethodPost {
 			userInviteForm := UserInviteForm{}
 			validationErrs := UserInviteFormSchema.Parse(zhttp.Request(r), &userInviteForm)
-			fmt.Println("coming here", validationErrs)
 			if validationErrs != nil {
 				errs := formatErrors(validationErrs)
 				inviteModal.Execute(w, map[string]interface{}{"Errors": errs})
 				return
 			}
 			userInvite, err := gorm.G[models.UserInvitation](uic.DB).Where("email = ?", userInviteForm.Email).First(r.Context())
-			fmt.Println("uu", userInvite)
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				fmt.Println("uu2", err)
 				err := gorm.G[models.UserInvitation](uic.DB).Create(r.Context(), &models.UserInvitation{
 					Email: userInviteForm.Email,
 					Token: "abc",
@@ -114,13 +110,11 @@ func (uic *UserInvitationsController) Post() http.HandlerFunc {
 func (uic *UserInvitationsController) Join() http.HandlerFunc {
 	joinModal := template.Must(template.ParseFS(uic.TemplateFS, "templates/layouts/auth.html", "templates/users/join.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("here")
 		token := r.PathValue("token")
 		userInvite, err := gorm.G[models.UserInvitation](uic.DB).Where("token = ?", token).First(r.Context())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Redirect(w, r, "/login/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		}
-		fmt.Println("here3")
 		joinModal.Execute(w, map[string]interface{}{"Errors": map[string]string{}, "Token": token, "Email": userInvite.Email})
 
 		// userJoinForm := UserJoinForm{}
@@ -135,17 +129,15 @@ func (uic *UserInvitationsController) Join() http.HandlerFunc {
 func (uic *UserInvitationsController) JoinComplete() http.HandlerFunc {
 	joinModal := template.Must(template.ParseFS(uic.TemplateFS, "templates/layouts/auth.html", "templates/users/join.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("here")
 		token := r.PathValue("token")
 		userInvite, err := gorm.G[models.UserInvitation](uic.DB).Where("token = ?", token).First(r.Context())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Redirect(w, r, "/login/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		}
 		userJoinForm := UserJoinForm{}
 		validationErrs := UserJoinFormSchema.Parse(zhttp.Request(r), &userJoinForm)
 		if validationErrs != nil {
 			errs := formatErrors(validationErrs)
-			fmt.Println("errr", errs)
 			joinModal.Execute(w, map[string]interface{}{"Errors": errs, "Token": token, "Email": userInvite.Email})
 			return
 		}
@@ -166,8 +158,8 @@ func NewUserInvitationsController(config *config.ConfigStruct, logger *slog.Logg
 		TemplateFS: templs,
 		Logger:     logger,
 	}
-	serverMux.HandleFunc("GET /users/invite/", middleware.Auth(config, db, userInvitationsController.Index()))
-	serverMux.HandleFunc("POST /users/invite/", middleware.Auth(config, db, userInvitationsController.Post()))
+	serverMux.HandleFunc("GET /users/invite", middleware.Auth(config, db, userInvitationsController.Index()))
+	serverMux.HandleFunc("POST /users/invite", middleware.Auth(config, db, userInvitationsController.Post()))
 	serverMux.HandleFunc("GET /users/join/{token}", middleware.Auth(config, db, userInvitationsController.Join()))
 	serverMux.HandleFunc("POST /users/join/{token}", middleware.Auth(config, db, userInvitationsController.JoinComplete()))
 

@@ -14,7 +14,7 @@ func IsSetupComplete(db *gorm.DB, next http.Handler) http.Handler {
 		if err != nil {
 		}
 		if usersCount > 2 {
-			http.Redirect(w, r, "/login/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 			return
 		}
 		next.ServeHTTP(w, r)
