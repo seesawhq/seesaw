@@ -7,6 +7,8 @@ type Flag struct {
 	Name        string
 	Key         string
 	Type        string
+	IsEnabled   bool
+	Variations  []Variation `gorm:"foreignKey:FlagID"`
 	WorkspaceID int64
 	Workspace   Workspace
 }

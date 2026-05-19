@@ -8,4 +8,5 @@ type Workspace struct {
 	Name         string
 	Flags        []Flag        `gorm:"foreignKey:WorkspaceID"`
 	Environments []Environment `gorm:"foreignKey:WorkspaceID"`
+	Members      []Member      `gorm:"foreignKey:WorkspaceID"`
 }

@@ -1,0 +1,30 @@
+{{template "layouts/dashboard.html" .}}
+
+{{define "content"}}
+<div class="px-16">
+    <h3 class="text-3xl">targets for flag <b class="font-extrabold">{{ .Name }}</b> for environment <b
+            class="font-extrabold">{{ (index
+            .Workspace.Environments 0).Name }}</b></h3>
+    <div class="flex justify-center">
+        <div class="card w-96 bg-base-100 card-xl shadow-sm">
+            <div class="card-body">
+                <!-- <h2 class="card-title">Xlarge Card</h2> -->
+                {{ if not .IsEnabled }}
+                <p>Flag is off serving off</p>
+                {{ end }}
+                <select name="" id="">
+                    {{ range .Workspace.Environments }}
+                    <option value="">{{ .Name }}</option>
+                    {{ end }}
+                </select>
+                {{ if not .IsEnabled }}
+                <div hx-post="/workspaces/{{ .Workspace.ID }}/flags/{{.ID}}/enable" class="justify-end card-actions">
+                    <button class="btn btn-primary">Enable</button>
+                </div>
+                {{ end }}
+
+            </div>
+        </div>
+    </div>
+
+    {{end}}

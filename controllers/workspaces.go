@@ -47,6 +47,7 @@ func (wc *WorkspacesController) Index() http.HandlerFunc {
 func (wc *WorkspacesController) New() http.HandlerFunc {
 	new_modal := template.Must(template.ParseFS(wc.TemplateFS, "templates/workspaces/new_modal.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value("user").(models.User)
 		if r.Method == http.MethodGet {
 			w.Header().Set("HX-Trigger", "open-new-workspace-modal")
 			new_modal.Execute(w, map[string]interface{}{"Errors": map[string]string{}})
@@ -68,6 +69,7 @@ func (wc *WorkspacesController) New() http.HandlerFunc {
 						{Name: "production"},
 						{Name: "development"},
 					},
+					Members: []models.Member{{User: user, Role: "ADMIN"}},
 				})
 				if err != nil {
 					wc.Logger.Error(err.Error())
@@ -88,12 +90,12 @@ func (wc *WorkspacesController) Detail() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		workspaceIDStr := r.PathValue("workspaceID")
 		workspaceID, _ := strconv.ParseInt(workspaceIDStr, 10, 64)
-		workspace, err := gorm.G[models.Workspace](wc.DB).Preload("Flags", nil).Where("ID = ?", workspaceID).First(r.Context())
+		workspace, err := gorm.G[models.Workspace](wc.DB).Preload("Environments", nil).Preload("Flags", nil).Preload("Members.User", nil).Where("ID = ?", workspaceID).First(r.Context())
 		if err != nil {
 			wc.Logger.Error("get workspace caused issue.", "workspaceID", workspaceIDStr)
 			return
 		}
-		Index.Execute(w, map[string]interface{}{"Flags": workspace.Flags, "WorkspaceID": workspaceIDStr})
+		Index.Execute(w, map[string]interface{}{"Workspace": workspace, "Flags": workspace.Flags, "WorkspaceID": workspaceIDStr})
 	}
 }
 

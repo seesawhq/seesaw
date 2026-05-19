@@ -1,37 +1,98 @@
 {{template "layouts/dashboard.html" .}}
 
 {{define "content"}}
-<div class="px-16">
+<div class="px-16 bg-base-100 py-8 rounded-2xl">
     <div class="flex justify-between items-center">
-        <h3 class="font-extrabold">Workspaces</h3>
-        <button class="btn btn-accent mb-4 flex justify-start" hx-get="/workspaces/new"
+        <div class="mb-6">
+            <h3 class="font-extrabold text-2xl">Workspaces</h3>
+            <p class="mt-1 max-w-xl text-sm leading-relaxed text-slate-500">
+                Use Workspaces to group your flags and environments. Access control is completely isolated, allowing you
+                to manage unique members and roles for every workspace.
+            </p>
+        </div>
+        <button class="btn btn-primary mb-4 flex justify-start" hx-get="/workspaces/new"
             hx-target="#new-workspace-modal-form-container">
             New workspace
         </button>
     </div>
+    {{ if eq (len .) 0 }}
+    <img src="/static/img/empty.svg" alt="">
+    {{end}}
+    {{ if gt (len .) 0 }}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full">
+        {{ range . }}
+        <a href="/workspaces/{{.ID}}">
+            <div class="card w-96 bg-base-100 card-xs shadow-sm grow">
+                <div class="card-body">
+                    <div class="flex justify-between items-center">
+                        <h2 class="card-title text-xl">
+                            {{ .Name }}
+                        </h2>
+                        <div class="text-slate-500 leading-relaxed">{{ len .Environments }} Environments</div>
 
-    <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-        {{ if gt (len .) 0 }}
+                    </div>
+                    <p>A card component has a figure, a body part, and inside body there are title and actions parts</p>
+                    <div class="justify-start">
+                        <div class="text-slate-500 leading-relaxed">{{ len .Environments }} FLags</div>
+                    </div>
+                    <div class="justify-end card-actions">
+                        <button class="btn btn-ghost">View</button>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {{end}}
+
+    </div>
+    {{end}}
+
+    {{ if gt (len .) 0 }}
+    <div class="overflow-x-auto shadow-md rounded-box border border-base-content/5">
+
         <table class="table">
             <thead>
-                <tr>
+                <!-- <tr>
                     <th>Name</th>
                     <th>Environments</th>
                     <th>Created</th>
-                </tr>
+                    <th>Actions</th>
+                </tr> -->
             </thead>
             <tbody>
                 {{ range . }}
                 <tr>
-                    <td><a href="/workspaces/{{.ID}}">{{ .Name }} - {{ .ID }}</a></td>
+                    <td class="max-w-xs">
+                        <a class="font-semibold text-xl" href="/workspaces/{{.ID}}">{{ .Name }}</a>
+                        <p class="text-slate-500">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                            eiusmod tempor incididunt ut
+                            labore et dolore magna aliqua. Ut enim ad minim veniam</p>
+                    </td>
                     <td>{{ len .Environments }}</td>
-                    <td>{{ .CreatedAt }}</td>
+                    <td>{{ .CreatedAt.Format "January 2, 2006 3:04 pm" }}</td>
+                    <td>
+                        <button class="btn btn-square">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                            </svg>
+                        </button>
+                        <button class="btn btn-square text-error">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                stroke="currentColor" class="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            </svg>
+                        </button>
+
+                    </td>
                 </tr>
                 {{ end }}
             </tbody>
         </table>
-        {{ end }}
+
     </div>
+    {{ end }}
 </div>
 <dialog id="new-workspace-modal" class="modal">
     <div class="modal-box">

@@ -3,6 +3,7 @@ package controllers
 import (
 	"embed"
 	"errors"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -39,20 +40,6 @@ var NewFlagFormSchema = zog.Struct(zog.Shape{
 		OneOf([]string{"boolean", "varient"}, zog.Message("please select a valid type")),
 })
 
-func (wc *FlagsController) Index() http.HandlerFunc {
-	Index := template.Must(template.ParseFS(wc.TemplateFS, "templates/layouts/dashboard.html", "templates/flags/index.html"))
-	return func(w http.ResponseWriter, r *http.Request) {
-		workspaceIDStr := r.PathValue("workspaceID")
-		workspaceID, _ := strconv.ParseInt(workspaceIDStr, 10, 64)
-		workspace, err := gorm.G[models.Workspace](wc.DB).Preload("Flag", nil).Where("ID = ?", workspaceID).First(r.Context())
-		if err != nil {
-			wc.Logger.Error("get workspace caused issue.", "workspaceID", workspaceIDStr)
-			return
-		}
-		Index.Execute(w, workspace.Flags)
-	}
-}
-
 func (fc *FlagsController) New() http.HandlerFunc {
 	new_modal := template.Must(template.ParseFS(fc.TemplateFS, "templates/flags/new_modal.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -73,28 +60,75 @@ func (fc *FlagsController) New() http.HandlerFunc {
 			validationErrs := NewFlagFormSchema.Parse(zhttp.Request(r), &newFlagForm)
 			if validationErrs != nil {
 				errs := formatErrors(validationErrs)
-				new_modal.Execute(w, map[string]interface{}{"Errors": errs, "WorkspaceID": workspace.ID})
+				new_modal.Execute(w, map[string]interface{}{"Errors": errs, "workspace_id": workspace.ID})
 				return
 			}
-			newFlag, err := gorm.G[models.Flag](fc.DB).Where("key = ?", newFlagForm.Key).First(r.Context())
+			existingFlag, err := gorm.G[models.Flag](fc.DB).Where("key = ?", newFlagForm.Key).First(r.Context())
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				err := gorm.G[models.Flag](fc.DB).Create(r.Context(), &models.Flag{
-					Name:      newFlagForm.Name,
-					Key:       newFlagForm.Key,
-					Type:      newFlagForm.Type,
-					Workspace: workspace,
-				})
+				onVariation := models.Variation{
+					Name:  "On",
+					Value: "on",
+				}
+				offVariation := models.Variation{
+					Name:             "Off",
+					Value:            "off",
+					IsDisableDefault: true,
+				}
+				newFlag := models.Flag{
+					Name:       newFlagForm.Name,
+					Key:        newFlagForm.Key,
+					Type:       newFlagForm.Type,
+					Workspace:  workspace,
+					Variations: []models.Variation{onVariation, offVariation},
+				}
+				err := gorm.G[models.Flag](fc.DB).Create(r.Context(), &newFlag)
 				if err != nil {
 					fc.Logger.Error(err.Error())
 				}
+				envs, _ := gorm.G[models.Environment](fc.DB).Where("workspace_id = ?", workspace.ID).Find(r.Context())
+				for _, env := range envs {
+					target := &models.Target{
+						Name:        "Default",
+						Environment: env,
+						Flag:        newFlag,
+						Type:        "DEFAULT",
+						ServeType:   "VARIANT",
+						Rollouts:    []models.Rollout{{Variation: onVariation, Percentage: 100}, {Variation: offVariation, Percentage: 0}},
+					}
+					err := gorm.G[models.Target](fc.DB).Create(r.Context(), target)
+					if err != nil {
+						fc.Logger.Error(err.Error())
+					}
+				}
+
 			}
-			if newFlag.ID > 0 {
+			if existingFlag.ID > 0 {
 				new_modal.Execute(w, map[string]interface{}{"Errors": map[string]string{"name": "flag with key already exists in this workspace."}, "WorkspaceID": workspace.ID})
 				return
 			}
 			w.Header().Set("HX-Refresh", "true")
 			w.Header().Set("HX-Trigger", "close-new-flag-modal")
 		}
+	}
+}
+
+func (fc *FlagsController) Detail() http.HandlerFunc {
+	detail := template.Must(template.ParseFS(fc.TemplateFS, "templates/layouts/dashboard.html", "templates/flags/detail.html"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		// workspaceIDStr := r.PathValue("workspaceID")
+		flagIDStr := r.PathValue("flagID")
+		// workspaceID, _ := strconv.ParseInt(workspaceIDStr, 10, 64)
+		flagID, _ := strconv.ParseInt(flagIDStr, 10, 64)
+		flag, _ := gorm.G[models.Flag](fc.DB).Preload("Variations", nil).Preload("Workspace.Environments", nil).Where("ID = ?", flagID).First(r.Context())
+		defaultVariation := flag.Variations[0].Name
+		for _, variation := range flag.Variations {
+			if variation.IsDisableDefault {
+				defaultVariation = variation.Name
+				break
+			}
+		}
+		fmt.Println("default variation", defaultVariation)
+		detail.Execute(w, flag)
 	}
 }
 
@@ -107,6 +141,6 @@ func NewFlagsController(config *config.ConfigStruct, logger *slog.Logger, templs
 	}
 	serverMux.HandleFunc("GET /workspaces/{workspaceID}/flags/new", middleware.Auth(config, db, flagsController.New()))
 	serverMux.HandleFunc("POST /workspaces/{workspaceID}/flags/new", middleware.Auth(config, db, flagsController.New()))
-	// serverMux.HandleFunc("GET /workspaces/new/", middleware.Auth(config, db, workspacesController.New()))
-	// serverMux.HandleFunc("POST /workspaces/new/", middleware.Auth(config, db, workspacesController.New()))
+	serverMux.HandleFunc("GET /workspaces/{workspaceID}/flags/{flagID}", middleware.Auth(config, db, flagsController.Detail()))
+	serverMux.HandleFunc("POST /workspaces/{workspaceID}/flags/{flagID}/enable", middleware.Auth(config, db, flagsController.Detail()))
 }

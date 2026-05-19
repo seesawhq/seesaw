@@ -43,11 +43,14 @@ func main() {
 	logger.Info("migrating models")
 	err = db.AutoMigrate(
 		&models.User{},
-		&models.Workspace{},
-		&models.Environment{},
-		&models.Member{},
-		&models.Flag{},
 		&models.UserInvitation{},
+		&models.Workspace{},
+		&models.Member{},
+		&models.Environment{},
+		&models.Flag{},
+		&models.Variation{},
+		&models.Target{},
+		&models.Rollout{},
 	)
 	if err != nil {
 		logger.Error("error while migrating models", "err", err.Error())
