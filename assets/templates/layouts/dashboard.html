@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/output.css">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js"
+        integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V"
+        crossorigin="anonymous"></script>
+    <title>Seesaw</title>
+</head>
+
+<body class="bg-base-200">
+    <div class="min-h-screen flex flex-col">
+
+        <nav class="navbar w-full bg-base-100 border-b border-base-200 min-h-16 px-6 justify-between z-30">
+
+            <div class="flex items-center gap-8">
+                <a href="/workspaces" class="font-semibold text-3xl text-primary rtracking-wider">
+                    seesaw
+                </a>
+
+                <ul class="menu menu-horizontal p-0 gap-1 hidden md:flex font-medium">
+                    <li>
+                        <a href="/workspaces" class="flex items-center gap-2 px-3 py-2 rounded-lg active">
+                            <svg xmlns="http://w3.org" viewBox="0 0 24 24" stroke-linejoin="round"
+                                stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor"
+                                class="size-4">
+                                <path d="M20 7h-9"></path>
+                                <path d="M14 17H5"></path>
+                                <circle cx="17" cy="17" r="3"></circle>
+                                <circle cx="7" cy="7" r="3"></circle>
+                            </svg>
+                            <span>Workspaces</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/users" class="flex items-center gap-2 px-3 py-2 rounded-lg active">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2"
+                                stroke="currentColor" class="size-4">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                    d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                            </svg>
+                            <span>Users</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="dropdown dropdown-end">
+                    <div tabindex="0" role="button"
+                        class="btn btn-ghost flex items-center gap-3 px-2 normal-case font-normal rounded-xl">
+                        <div class="avatar placeholder">
+                            <div
+                                class="bg-neutral text-neutral-content w-8 rounded-full flex items-center justify-center">
+                                <span class="text-xs">JD</span>
+                            </div>
+                        </div>
+                        <div class="text-left leading-none hidden sm:block">
+                            <p class="text-sm font-semibold text-base-content">{{ .User.FirstName }} {{ .User.LastName
+                                }}</p>
+                            <p class="text-xs text-base-content/60 mt-0.5">{{ .User.Email }}</p>
+                        </div>
+                        <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" class="size-4 opacity-50 hidden sm:block">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </div>
+
+                    <ul tabindex="0"
+                        class="dropdown-content menu bg-base-100 rounded-box w-56 p-2 shadow-xl mt-2 border border-base-200">
+                        <li class="md:hidden"><a href="/workspaces">Workspaces</a></li>
+                        <div class="divider my-1 md:hidden"></div>
+
+                        <li><a href="/profile">My Profile</a></li>
+                        <li><a href="/settings">Account Settings</a></li>
+                        <div class="divider my-1"></div>
+                        <li>
+                            <a href="/logout" class="text-error hover:bg-error/10">
+                                <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                    stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                                </svg>
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Breadcrumbs Navigation Sub-Bar -->
+        <!-- <div class="bg-base-100 border-b border-base-200 px-6 py-2 text-sm breadcrumbs">
+            <ul>
+                <li>
+                    <a href="/workspaces"
+                        class="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
+                        <svg xmlns="http://w3.org" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                            fill="none" stroke-linecap="round" stroke-linejoin="round" class="size-4">
+                            <path d="M20 7h-9"></path>
+                            <path d="M14 17H5"></path>
+                            <circle cx="17" cy="17" r="3"></circle>
+                            <circle cx="7" cy="7" r="3"></circle>
+                        </svg>
+                        Workspaces
+                    </a>
+                </li>
+                <li>
+                    <span class="flex items-center gap-1.5 font-medium text-base-content">
+                        Default Workspace
+                    </span>
+                </li>
+            </ul>
+        </div> -->
+
+        <main class="px-32 pt-12 grow">
+            {{template "content" .}}
+        </main>
+    </div>
+    <dialog id="modal" class="modal modal-bottom sm:modal-middle transition-all duration-300">
+        <div class="modal-box p-6 max-w-md border border-base-200/50 shadow-xl relative">
+            <form method="dialog">
+                <button
+                    class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 hover:bg-error/10 hover:text-error transition-colors duration-200">✕</button>
+            </form>
+            <div class="mb-4">
+                <h3 id="modal-title" class="text-lg font-bold tracking-tight text-base-content">Title</h3>
+                <p id="modal-description" class="text-xs text-base-content/60 mt-0.5">Description</p>
+            </div>
+            <div id="modal-form-container" class="mt-2"></div>
+        </div>
+    </dialog>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const modal = document.getElementById('modal');
+            document.body.addEventListener("open-modal", function (evt) {
+                modal.showModal();
+            });
+            document.body.addEventListener("close-modal", function (evt) {
+                modal.close();
+            });
+        });
+    </script>
+</body>
+
+</html>

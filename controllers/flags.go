@@ -36,8 +36,8 @@ var NewFlagFormSchema = zog.Struct(zog.Shape{
 	"type": zog.
 		String().
 		Required().
-		Min(1, zog.Message("key is required")).
-		OneOf([]string{"boolean", "varient"}, zog.Message("please select a valid type")),
+		Min(1, zog.Message("type is required")).
+		OneOf([]string{"boolean", "variant"}, zog.Message("please select a valid type")),
 })
 
 func (fc *FlagsController) New() http.HandlerFunc {
@@ -51,7 +51,7 @@ func (fc *FlagsController) New() http.HandlerFunc {
 			return
 		}
 		if r.Method == http.MethodGet {
-			w.Header().Set("HX-Trigger", "open-new-flag-modal")
+			w.Header().Set("HX-Trigger", "open-modal")
 			new_modal.Execute(w, map[string]interface{}{"Errors": map[string]string{}, "WorkspaceID": workspace.ID})
 			return
 		}
@@ -60,7 +60,7 @@ func (fc *FlagsController) New() http.HandlerFunc {
 			validationErrs := NewFlagFormSchema.Parse(zhttp.Request(r), &newFlagForm)
 			if validationErrs != nil {
 				errs := formatErrors(validationErrs)
-				new_modal.Execute(w, map[string]interface{}{"Errors": errs, "workspace_id": workspace.ID})
+				new_modal.Execute(w, map[string]interface{}{"Errors": errs, "WorkspaceID": workspace.ID})
 				return
 			}
 			existingFlag, err := gorm.G[models.Flag](fc.DB).Where("key = ?", newFlagForm.Key).First(r.Context())
@@ -107,7 +107,7 @@ func (fc *FlagsController) New() http.HandlerFunc {
 				return
 			}
 			w.Header().Set("HX-Refresh", "true")
-			w.Header().Set("HX-Trigger", "close-new-flag-modal")
+			w.Header().Set("HX-Trigger", "close-modal")
 		}
 	}
 }
@@ -115,12 +115,22 @@ func (fc *FlagsController) New() http.HandlerFunc {
 func (fc *FlagsController) Detail() http.HandlerFunc {
 	detail := template.Must(template.ParseFS(fc.TemplateFS, "templates/layouts/dashboard.html", "templates/flags/detail.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
-		// workspaceIDStr := r.PathValue("workspaceID")
+		envStr := r.URL.Query().Get("env")
 		flagIDStr := r.PathValue("flagID")
-		// workspaceID, _ := strconv.ParseInt(workspaceIDStr, 10, 64)
+		workspaceID := r.PathValue("workspaceID")
+		if len(envStr) == 0 {
+			http.Redirect(w, r, fmt.Sprintf("/workspaces/%s/flags/%s?env=production", workspaceID, flagIDStr), http.StatusPermanentRedirect)
+			return
+		}
+		env, _ := gorm.G[models.Environment](fc.DB).Where("name = ? and workspace_id", envStr, workspaceID).First(r.Context())
+		if env.ID == 0 {
+			http.Redirect(w, r, "/workspaces", http.StatusPermanentRedirect)
+			return
+		}
+		selectedEnv := env.Name
 		flagID, _ := strconv.ParseInt(flagIDStr, 10, 64)
 		flag, _ := gorm.G[models.Flag](fc.DB).Preload("Variations", nil).Preload("Workspace.Environments", nil).Where("ID = ?", flagID).First(r.Context())
-		defaultVariation := flag.Variations[0].Name
+		defaultVariation := ""
 		for _, variation := range flag.Variations {
 			if variation.IsDisableDefault {
 				defaultVariation = variation.Name
@@ -128,7 +138,7 @@ func (fc *FlagsController) Detail() http.HandlerFunc {
 			}
 		}
 		fmt.Println("default variation", defaultVariation)
-		detail.Execute(w, flag)
+		detail.Execute(w, map[string]interface{}{"Flag": flag, "SelectedEnv": selectedEnv, "DefaultVariation": defaultVariation})
 	}
 }
 

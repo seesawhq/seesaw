@@ -1,12 +1,12 @@
 package main
 
 import (
-	"embed"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 
+	"github.com/seesawhq/seesaw/assets"
 	"github.com/seesawhq/seesaw/config"
 	"github.com/seesawhq/seesaw/controllers"
 	"github.com/seesawhq/seesaw/middleware"
@@ -14,12 +14,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
-
-//go:embed static
-var StaticFiles embed.FS
-
-//go:embed templates
-var TemplateFS embed.FS
 
 func main() {
 
@@ -60,7 +54,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// get handler which can serve static files
-	fs := http.FileServer(http.FS(StaticFiles))
+	fs := http.FileServer(http.FS(assets.StaticFiles))
 
 	// this path will server all the static files.
 	// any file stored in static directory will be stored
@@ -68,12 +62,12 @@ func main() {
 	mux.Handle("GET /static/", fs)
 
 	// start adding controller. each controller adds routes to mux
-	controllers.NewWorkspacesController(&config, logger, TemplateFS, db, mux)
-	controllers.NewDashboardController(&config, logger, TemplateFS, db, mux)
-	controllers.NewLoginController(&config, logger, TemplateFS, db, mux)
-	controllers.NewUsersController(&config, logger, TemplateFS, db, mux)
-	controllers.NewUserInvitationsController(&config, logger, TemplateFS, db, mux)
-	controllers.NewFlagsController(&config, logger, TemplateFS, db, mux)
+	controllers.NewWorkspacesController(&config, logger, assets.TemplateFS, db, mux)
+	controllers.NewDashboardController(&config, logger, assets.TemplateFS, db, mux)
+	controllers.NewLoginController(&config, logger, assets.TemplateFS, db, mux)
+	controllers.NewUsersController(&config, logger, assets.TemplateFS, db, mux)
+	controllers.NewUserInvitationsController(&config, logger, assets.TemplateFS, db, mux)
+	controllers.NewFlagsController(&config, logger, assets.TemplateFS, db, mux)
 
 	// If demo flag is on. Here we can do things which makes demo run.
 	// for now we are creating demo user. So potential user can use

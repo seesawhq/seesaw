@@ -3,6 +3,7 @@ package controllers
 import (
 	"embed"
 	"errors"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -28,19 +29,42 @@ var validTextRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 type NewWorkspaceForm struct {
 	Name string
+	Key  string
 }
 
 var NewWorkspaceFormSchema = zog.Struct(zog.Shape{
 	"name": zog.String().Required().
-		Min(1, zog.Message("name is required")).
+		Min(1, zog.Message("workspace name is required")).
+		Max(50, zog.Message("Workspace name can be max 50 character long.")),
+	"key": zog.String().Required().
+		Min(1, zog.Message("workspace key is required")).
+		Max(50, zog.Message("Workspace key can be max 50 character long.")).
 		Match(validTextRegex, zog.Message("Only letters, numbers, underscores, and hyphens are allowed")),
 })
 
 func (wc *WorkspacesController) Index() http.HandlerFunc {
 	Index := template.Must(template.ParseFS(wc.TemplateFS, "templates/layouts/dashboard.html", "templates/workspaces/index.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
-		workspaces, _ := gorm.G[models.Workspace](wc.DB).Preload("Environments", nil).Find(r.Context())
-		Index.Execute(w, workspaces)
+		user := r.Context().Value("user").(models.User)
+		pageStr := r.URL.Query().Get("page")
+		if len(pageStr) == 0 {
+			pageStr = "1"
+		}
+		page, err := strconv.ParseInt(pageStr, 10, 64)
+		if err != nil {
+			page = 1
+		}
+		limit := 6
+		totalWorkspaces, _ := gorm.G[models.Workspace](wc.DB).Count(r.Context(), "id")
+		workspaces, _ := gorm.G[models.Workspace](wc.DB).Preload("Environments", nil).Limit(limit).Offset((int(page) - 1) * limit).Find(r.Context())
+		nextPage := page + 1
+		hasNextPage := false
+		if totalWorkspaces-(page*int64(limit)) > 0 {
+			hasNextPage = true
+		}
+		fmt.Println(page, nextPage, totalWorkspaces, hasNextPage)
+
+		Index.Execute(w, map[string]interface{}{"User": user, "Workspaces": workspaces, "PreviousPage": page - 1, "CurrentPage": page, "HasNextPage": hasNextPage, "NextPage": nextPage})
 	}
 }
 
@@ -49,7 +73,7 @@ func (wc *WorkspacesController) New() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value("user").(models.User)
 		if r.Method == http.MethodGet {
-			w.Header().Set("HX-Trigger", "open-new-workspace-modal")
+			w.Header().Set("HX-Trigger", "open-modal")
 			new_modal.Execute(w, map[string]interface{}{"Errors": map[string]string{}})
 			return
 		}
@@ -61,10 +85,11 @@ func (wc *WorkspacesController) New() http.HandlerFunc {
 				new_modal.Execute(w, map[string]interface{}{"Errors": errs})
 				return
 			}
-			newWorkspace, err := gorm.G[models.Workspace](wc.DB).Where("name = ?", newWorkspaceForm.Name).First(r.Context())
+			newWorkspace, err := gorm.G[models.Workspace](wc.DB).Where("key = ?", newWorkspaceForm.Key).First(r.Context())
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				err := gorm.G[models.Workspace](wc.DB).Create(r.Context(), &models.Workspace{
 					Name: newWorkspaceForm.Name,
+					Key:  newWorkspace.Key,
 					Environments: []models.Environment{
 						{Name: "production"},
 						{Name: "development"},
@@ -76,11 +101,11 @@ func (wc *WorkspacesController) New() http.HandlerFunc {
 				}
 			}
 			if newWorkspace.ID > 0 {
-				new_modal.Execute(w, map[string]interface{}{"Errors": map[string]string{"name": "workspace with same name already exists."}})
+				new_modal.Execute(w, map[string]interface{}{"Errors": map[string]string{"key": "workspace with same key already exists."}})
 				return
 			}
 			w.Header().Set("HX-Refresh", "true")
-			w.Header().Set("HX-Trigger", "close-new-workspace-modal")
+			w.Header().Set("HX-Trigger", "close-modal")
 		}
 	}
 }
@@ -88,14 +113,15 @@ func (wc *WorkspacesController) New() http.HandlerFunc {
 func (wc *WorkspacesController) Detail() http.HandlerFunc {
 	Index := template.Must(template.ParseFS(wc.TemplateFS, "templates/layouts/dashboard.html", "templates/workspaces/detail.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value("user").(models.User)
 		workspaceIDStr := r.PathValue("workspaceID")
 		workspaceID, _ := strconv.ParseInt(workspaceIDStr, 10, 64)
-		workspace, err := gorm.G[models.Workspace](wc.DB).Preload("Environments", nil).Preload("Flags", nil).Preload("Members.User", nil).Where("ID = ?", workspaceID).First(r.Context())
+		workspace, err := gorm.G[models.Workspace](wc.DB).Preload("Environments", nil).Preload("Flags.Variations", nil).Preload("Members.User", nil).Where("ID = ?", workspaceID).First(r.Context())
 		if err != nil {
 			wc.Logger.Error("get workspace caused issue.", "workspaceID", workspaceIDStr)
 			return
 		}
-		Index.Execute(w, map[string]interface{}{"Workspace": workspace, "Flags": workspace.Flags, "WorkspaceID": workspaceIDStr})
+		Index.Execute(w, map[string]any{"User": user, "Workspace": workspace, "Flags": workspace.Flags, "WorkspaceID": workspaceIDStr})
 	}
 }
 

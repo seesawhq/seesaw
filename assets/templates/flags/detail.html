@@ -1,0 +1,56 @@
+{{template "layouts/dashboard.html" .}}
+
+{{define "content"}}
+<div class="px-16 bg-base-100 py-8 rounded-2xl mb-8">
+    <div class="flex justify-between items-center">
+        <div class="mb-6">
+            <h3 class="font-extrabold text-2xl">
+                {{ .Flag.Name }}
+                {{ if eq .SelectedEnv "development" }}
+                <span class="badge badge-info font-light text-gray-800">{{ .SelectedEnv }}</span>
+                {{ else }}
+                <span class="badge badge-accent font-light text-gray-800">{{ .SelectedEnv }}</span>
+                {{ end }}
+
+            </h3>
+            <p class="mt-1 max-w-xl text-sm leading-relaxed text-slate-500">
+                {{ .Flag.Type }}
+            </p>
+        </div>
+        <select class="select select-accent" name="env"
+            hx-get="/workspaces/{{ .Flag.WorkspaceID }}/flags/{{ .Flag.ID }}" hx-push-url="true" hx-target="body"
+            hx-swap="outerHTML">
+            {{ range .Flag.Workspace.Environments }}
+            <option value="{{ .Name }}" {{ if eq .Name $.SelectedEnv }}selected{{end}}>{{ .Name }}</option>
+            {{ end }}
+        </select>
+    </div>
+    {{ if not .Flag.IsEnabled }}
+    <p class="text-xl text-center mt-8">Flag is <span class="bagde badge-error">disabled</span> serving <span
+            class="bagde badge-error">{{ .DefaultVariation }}</span></p>
+    <div class="flex justify-end gap-2">
+        <button class="btn btn-primary">Enable</button>
+        <button class="btn btn-accent">Change default variant</button>
+
+    </div>
+    <div class="divider">Targets</div>
+    <div tabindex="0" class="collapse collapse-arrow bg-base-100 border-base-300 border">
+        <div class="collapse-title font-semibold">Default serve</div>
+        <div class="collapse-content text-sm">
+            serving off
+        </div>
+    </div>
+    <div tabindex="1" class=" mt-2 collapse collapse-arrow bg-base-100 border-base-300 border">
+        <div class="collapse-title font-semibold flex justify-between align-baseline">
+            <div>
+                Indiviual target
+            </div>
+            <button class="btn btn-info btn-sm">Edit</button>
+        </div>
+        <div class="collapse-content text-sm">
+            serving off
+        </div>
+    </div>
+    {{ end }}
+</div>
+{{end}}
